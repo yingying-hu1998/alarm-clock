@@ -171,6 +171,24 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
+
+        .play-button {
+            display: none;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            border-radius: 25px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 20px auto;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .play-button.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -248,6 +266,8 @@
             <button onclick="setAlarm()">设置闹钟</button>
             <button onclick="stopAlarm()" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); color: white;">停止闹钟</button>
 
+            <button id="play-button" class="play-button" onclick="playAlarmSound()">🔊 点击播放闹钟</button>
+
             <div class="status" id="status"></div>
         </div>
     </div>
@@ -259,9 +279,28 @@
     <script>
         let alarmTimeout = null;
         let alarmInterval = null;
+        let audioUnlocked = false;
 
         // 设置默认日期为今天
         document.getElementById('alarm-date').valueAsDate = new Date();
+
+        // 解锁音频播放（微信浏览器需要用户交互）
+        function unlockAudio() {
+            if (!audioUnlocked) {
+                const audio = document.getElementById('alarm-sound');
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audioUnlocked = true;
+                }).catch(() => {
+                    // 如果自动播放失败，不做处理
+                });
+            }
+        }
+
+        // 页面加载时尝试解锁音频
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
 
         function setAlarm() {
             const dateInput = document.getElementById('alarm-date').value;
@@ -307,11 +346,17 @@
         function ringAlarm() {
             const status = document.getElementById('status');
             status.className = 'status ringing';
-            status.textContent = '⏰ 起床时间到了！点击"取消闹钟"停止播放';
+            status.textContent = '⏰ 起床时间到了！点击"停止闹钟"停止播放';
 
             // 播放提示音
             const audio = document.getElementById('alarm-sound');
-            audio.play();
+            const playButton = document.getElementById('play-button');
+
+            audio.play().catch(() => {
+                // 如果自动播放失败（微信浏览器），显示播放按钮
+                playButton.classList.add('show');
+                status.textContent = '⏰ 起床时间到了！请点击下方按钮播放闹钟';
+            });
 
             // 显示浏览器通知
             if ('Notification' in window && Notification.permission === 'granted') {
@@ -320,6 +365,13 @@
                     icon: '⏰'
                 });
             }
+        }
+
+        function playAlarmSound() {
+            const audio = document.getElementById('alarm-sound');
+            const playButton = document.getElementById('play-button');
+            audio.play();
+            playButton.classList.remove('show');
         }
 
         function stopAlarm() {
@@ -339,6 +391,9 @@
             const status = document.getElementById('status');
             status.className = 'status';
             status.style.display = 'none';
+
+            const playButton = document.getElementById('play-button');
+            playButton.classList.remove('show');
         }
 
         // 请求通知权限
