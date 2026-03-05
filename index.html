@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闹钟提醒</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+        }
+
+        .tiger-container {
+            margin: 20px auto 30px;
+            width: 200px;
+            height: 200px;
+        }
+
+        #tiger-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .tiger-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 3s ease-in-out forwards;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .tiger-fill {
+            opacity: 0;
+            animation: fadeIn 1s ease-in 2.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .eye-blink {
+            animation: blink 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes blink {
+            0%, 48%, 52%, 100% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(0.1);
+            }
+        }
+
+        h1 {
+            color: #ff6b6b;
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .alarm-section {
+            margin-top: 20px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+
+        input[type="date"],
+        input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus,
+        input[type="time"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.ringing {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>下次不许这么晚起了！</h1>
+
+        <div class="tiger-container">
+            <svg id="tiger-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- 老虎头部 -->
+                <ellipse class="tiger-fill" cx="100" cy="100" rx="60" ry="55" fill="#ff9966"/>
+                <path class="tiger-path" d="M 40 100 Q 40 55 100 55 Q 160 55 160 100 Q 160 145 100 145 Q 40 145 40 100" stroke="#ff6600"/>
+
+                <!-- 耳朵 -->
+                <ellipse class="tiger-fill" cx="65" cy="60" rx="18" ry="25" fill="#ff9966"/>
+                <ellipse class="tiger-fill" cx="135" cy="60" rx="18" ry="25" fill="#ff9966"/>
+                <path class="tiger-path" d="M 65 40 Q 55 50 65 70" stroke="#ff6600"/>
+                <path class="tiger-path" d="M 135 40 Q 145 50 135 70" stroke="#ff6600"/>
+
+                <!-- 耳朵内部 -->
+                <ellipse class="tiger-fill" cx="65" cy="60" rx="8" ry="12" fill="#ffccaa"/>
+                <ellipse class="tiger-fill" cx="135" cy="60" rx="8" ry="12" fill="#ffccaa"/>
+
+                <!-- 老虎条纹 -->
+                <path class="tiger-path" d="M 55 75 Q 50 80 55 85" stroke="#ff6600" stroke-width="3"/>
+                <path class="tiger-path" d="M 145 75 Q 150 80 145 85" stroke="#ff6600" stroke-width="3"/>
+                <path class="tiger-path" d="M 70 65 L 75 70" stroke="#ff6600" stroke-width="2"/>
+                <path class="tiger-path" d="M 130 65 L 125 70" stroke="#ff6600" stroke-width="2"/>
+
+                <!-- 睡眼朦胧的眼睛 -->
+                <g class="eye-blink">
+                    <ellipse class="tiger-fill" cx="80" cy="95" rx="12" ry="8" fill="#333"/>
+                    <ellipse class="tiger-fill" cx="120" cy="95" rx="12" ry="8" fill="#333"/>
+                    <ellipse class="tiger-fill" cx="82" cy="93" rx="4" ry="3" fill="#fff"/>
+                    <ellipse class="tiger-fill" cx="122" cy="93" rx="4" ry="3" fill="#fff"/>
+                </g>
+
+                <!-- 困倦的眼袋 -->
+                <path class="tiger-path" d="M 68 100 Q 80 103 92 100" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 108 100 Q 120 103 132 100" stroke="#ff6600" stroke-width="1.5"/>
+
+                <!-- 鼻子 -->
+                <ellipse class="tiger-fill" cx="100" cy="110" rx="8" ry="6" fill="#ff6600"/>
+                <path class="tiger-path" d="M 100 110 L 100 118" stroke="#ff6600" stroke-width="2"/>
+
+                <!-- 嘴巴（困倦的表情） -->
+                <path class="tiger-path" d="M 100 118 Q 85 125 75 120" stroke="#ff6600" stroke-width="2"/>
+                <path class="tiger-path" d="M 100 118 Q 115 125 125 120" stroke="#ff6600" stroke-width="2"/>
+
+                <!-- 胡须 -->
+                <path class="tiger-path" d="M 60 105 L 35 100" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 60 110 L 30 110" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 60 115 L 35 120" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 140 105 L 165 100" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 140 110 L 170 110" stroke="#ff6600" stroke-width="1.5"/>
+                <path class="tiger-path" d="M 140 115 L 165 120" stroke="#ff6600" stroke-width="1.5"/>
+
+                <!-- Z字符表示睡觉 -->
+                <text class="tiger-fill" x="150" y="50" font-size="20" fill="#667eea" font-weight="bold" opacity="0.7">Z</text>
+                <text class="tiger-fill" x="165" y="35" font-size="16" fill="#667eea" font-weight="bold" opacity="0.5">z</text>
+                <text class="tiger-fill" x="175" y="25" font-size="12" fill="#667eea" font-weight="bold" opacity="0.3">z</text>
+            </svg>
+        </div>
+
+        <div class="alarm-section">
+            <div class="input-group">
+                <label for="alarm-date">选择日期：</label>
+                <input type="date" id="alarm-date">
+            </div>
+
+            <div class="input-group">
+                <label for="alarm-time">选择时间：</label>
+                <input type="time" id="alarm-time">
+            </div>
+
+            <button onclick="setAlarm()">设置闹钟</button>
+            <button onclick="cancelAlarm()" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); color: white;">取消闹钟</button>
+
+            <div class="status" id="status"></div>
+        </div>
+    </div>
+
+    <audio id="alarm-sound" loop>
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXvzn0vBSh+zPDajzsKElyx6OyrWBUIQ5zd8sFuJAUuhM/z24k2CBhku+zooVARC0yl4fG5ZRwFNo3V7859LwUofsz" type="audio/wav">
+    </audio>
+
+    <script>
+        let alarmTimeout = null;
+        let alarmInterval = null;
+
+        // 设置默认日期为今天
+        document.getElementById('alarm-date').valueAsDate = new Date();
+
+        function setAlarm() {
+            const dateInput = document.getElementById('alarm-date').value;
+            const timeInput = document.getElementById('alarm-time').value;
+            const status = document.getElementById('status');
+
+            if (!dateInput || !timeInput) {
+                status.className = 'status ringing';
+                status.textContent = '请选择日期和时间！';
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+                return;
+            }
+
+            const alarmTime = new Date(dateInput + 'T' + timeInput);
+            const now = new Date();
+            const timeDiff = alarmTime - now;
+
+            if (timeDiff <= 0) {
+                status.className = 'status ringing';
+                status.textContent = '请选择未来的时间！';
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+                return;
+            }
+
+            // 取消之前的闹钟
+            if (alarmTimeout) {
+                clearTimeout(alarmTimeout);
+            }
+
+            // 设置新闹钟
+            alarmTimeout = setTimeout(() => {
+                ringAlarm();
+            }, timeDiff);
+
+            status.className = 'status active';
+            status.textContent = `闹钟已设置：${alarmTime.toLocaleString('zh-CN')}`;
+        }
+
+        function ringAlarm() {
+            const status = document.getElementById('status');
+            status.className = 'status ringing';
+            status.textContent = '⏰ 起床时间到了！下次不许这么晚起了！';
+
+            // 播放提示音
+            const audio = document.getElementById('alarm-sound');
+            audio.play();
+
+            // 显示浏览器通知
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('闹钟提醒', {
+                    body: '下次不许这么晚起了！',
+                    icon: '⏰'
+                });
+            }
+
+            // 5秒后自动停止
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }, 5000);
+        }
+
+        function cancelAlarm() {
+            if (alarmTimeout) {
+                clearTimeout(alarmTimeout);
+                alarmTimeout = null;
+            }
+            if (alarmInterval) {
+                clearInterval(alarmInterval);
+                alarmInterval = null;
+            }
+
+            const audio = document.getElementById('alarm-sound');
+            audio.pause();
+            audio.currentTime = 0;
+
+            const status = document.getElementById('status');
+            status.className = 'status';
+            status.style.display = 'none';
+        }
+
+        // 请求通知权限
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>
