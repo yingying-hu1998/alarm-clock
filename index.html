@@ -184,10 +184,46 @@
             margin: 20px auto;
             font-weight: bold;
             animation: pulse 1s infinite;
+            width: 80%;
         }
 
         .play-button.show {
             display: block;
+        }
+
+        .alarm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .alarm-modal.show {
+            display: flex;
+        }
+
+        .alarm-modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .alarm-modal h2 {
+            color: #ff6b6b;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .alarm-modal button {
+            margin: 10px;
         }
     </style>
 </head>
@@ -272,6 +308,16 @@
         </div>
     </div>
 
+    <!-- 闹钟弹窗 -->
+    <div id="alarm-modal" class="alarm-modal">
+        <div class="alarm-modal-content">
+            <h2>⏰ 起床时间到了！</h2>
+            <p style="font-size: 18px; margin: 20px 0;">下次不许这么晚起了！</p>
+            <button onclick="playAlarmSound()" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); font-size: 18px; padding: 15px 40px;">🔊 播放闹钟</button>
+            <button onclick="stopAlarm()" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%); font-size: 18px; padding: 15px 40px;">停止</button>
+        </div>
+    </div>
+
     <audio id="alarm-sound" loop>
         <source src="https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3" type="audio/mpeg">
     </audio>
@@ -346,16 +392,16 @@
         function ringAlarm() {
             const status = document.getElementById('status');
             status.className = 'status ringing';
-            status.textContent = '⏰ 起床时间到了！点击"停止闹钟"停止播放';
+            status.textContent = '⏰ 起床时间到了！';
 
-            // 播放提示音
+            // 显示弹窗
+            const modal = document.getElementById('alarm-modal');
+            modal.classList.add('show');
+
+            // 尝试自动播放
             const audio = document.getElementById('alarm-sound');
-            const playButton = document.getElementById('play-button');
-
             audio.play().catch(() => {
-                // 如果自动播放失败（微信浏览器），显示播放按钮
-                playButton.classList.add('show');
-                status.textContent = '⏰ 起床时间到了！请点击下方按钮播放闹钟';
+                // 微信浏览器会阻止自动播放，用户需要点击按钮
             });
 
             // 显示浏览器通知
@@ -369,9 +415,7 @@
 
         function playAlarmSound() {
             const audio = document.getElementById('alarm-sound');
-            const playButton = document.getElementById('play-button');
             audio.play();
-            playButton.classList.remove('show');
         }
 
         function stopAlarm() {
@@ -392,8 +436,8 @@
             status.className = 'status';
             status.style.display = 'none';
 
-            const playButton = document.getElementById('play-button');
-            playButton.classList.remove('show');
+            const modal = document.getElementById('alarm-modal');
+            modal.classList.remove('show');
         }
 
         // 请求通知权限
